@@ -42,4 +42,5 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+*.pkl
 

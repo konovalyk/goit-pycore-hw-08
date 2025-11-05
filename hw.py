@@ -1,5 +1,25 @@
 from collections import UserDict
 from datetime import datetime, timedelta #, to_datetime
+import pickle
+
+def save_data(book, filename="addressbook.pkl"):
+    try:
+        with open(filename, "wb") as f:
+            pickle.dump(book, f)
+    except Exception as e:
+        print(f"Error saving data: {e}")
+        raise
+
+def load_data(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()  # Повернення нової адресної книги, якщо файл не знайдено
+    except (pickle.UnpicklingError, EOFError, ValueError) as e:
+        print(f"Error loading data: {e}. Creating new address book.")
+        return AddressBook()  # Повернення нової адресної книги, якщо файл пошкоджений
+
 
 class Field:
     def __init__(self, value):
@@ -219,17 +239,20 @@ def birthdays(args, book: AddressBook):
     return result.strip()
 
 def main():
-    book = AddressBook()
+    book = load_data()
+    # book = AdressBook()
     print("Welcome to the assistant bot!\nType 'help' for available commands.")
-    while True:
-        user_input = input("Enter a command: ")
-        command, *args = parse_input(user_input)
+    try:
+        while True:
+            user_input = input("Enter a command: ")
+            command, *args = parse_input(user_input)
 
-        if command in ["close", "exit"]:
-            print("Good bye!")
-            break
-        elif command == "help":
-            print("Available commands:\n"
+            if command in ["close", "exit"]:
+                save_data(book)
+                print("Good bye!")           
+                break
+            elif command == "help":
+                print("Available commands:\n"
                   "add <name> <phone> - Add a new contact\n"
                   "change <name> <old_phone> <new_phone> - Change an existing contact's phone number\n"
                   "phone <name> - Show the phone number of a contact\n"
@@ -240,24 +263,32 @@ def main():
                   "hello - Get greeting from bot\n"
                   "close/exit - Exit the program\n"
                   "help - Show this help message")
-        elif command == "hello":
-            print("How can I help you?")
-        elif command == "add":
-            print(add_contact(args, book))
-        elif command == "change":
-            print(change_contact(args, book))
-        elif command == "phone":
-            print(show_phone(args, book))
-        elif command == "all":
-            print(show_all_contacts(book))
-        elif command == "add-birthday":
-            print(add_birthday(args, book))
-        elif command == "show-birthday":
-            print(show_birthday(args, book))
-        elif command == "birthdays":
-            print(birthdays(args, book))
-        else:
-            print("Invalid command.")
+            elif command == "hello":
+                print("How can I help you?")
+            elif command == "add":
+                print(add_contact(args, book))
+            elif command == "change":
+                print(change_contact(args, book))
+            elif command == "phone":
+                print(show_phone(args, book))
+            elif command == "all":
+                print(show_all_contacts(book))
+            elif command == "add-birthday":
+                print(add_birthday(args, book))
+            elif command == "show-birthday":
+                print(show_birthday(args, book))
+            elif command == "birthdays":
+                print(birthdays(args, book))
+            else:
+                print("Invalid command.")
+    except KeyboardInterrupt:
+        print("\nProgram interrupted. Saving data...")
+        save_data(book)
+        print("Good bye!")
+    except Exception as e:
+        print(f"\nUnexpected error: {e}. Saving data...")
+        save_data(book)
+        raise
 
 if __name__ == "__main__":
     main()
